@@ -1,11 +1,10 @@
 import os
+from typing import List, Dict, Iterator, Any
+from dataclasses import dataclass, field
+import re 
+# Not standard
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-from typing import List, Dict, Union
-from dataclasses import dataclass, field
-import pdb 
-import re 
-import textwrap
 
 
 # ボットトークンと署名シークレットを使ってアプリを初期化します
@@ -13,7 +12,7 @@ app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 token = os.environ["SLACK_BOT_TOKEN"]
 
 @app.message("計算")
-def test_client(client, message, say):
+def calculate_work_time(client, message, say):
     channel_id = message["channel"]
     thread_ts = message["thread_ts"]
     thread_msgs = client.conversations_replies(token=token, channel=channel_id, ts=thread_ts)["messages"]
@@ -24,23 +23,23 @@ def test_client(client, message, say):
 
 @dataclass
 class PersonWorkTime:
-    sales: Dict[str, Union[str, int]] = field(
+    sales: Dict[str, Any] = field(
         default_factory = lambda: {"pattern": "営業", "hour": 0}
     )
-    office_work: Dict[str, Union[str, int]] = field(
+    office_work: Dict[str, Any] = field(
         default_factory = lambda: {"pattern": "事務作業", "hour": 0}
     )
-    phone_support: Dict[str, Union[str, int]] = field(
+    phone_support: Dict[str, Any] = field(
         default_factory = lambda: {"pattern": "電話対応", "hour": 0}
     )
-    total: Dict[str, Union[str, int]] = field(
+    total: Dict[str, Any] = field(
         default_factory = lambda: {"pattern": "合計", "hour": 0}
     )
 
     def _get_ins_var_keys(self) -> List[str]:
         return list(self.__dict__.keys())
 
-    def _get_ins_var_values(self) -> List[Dict[str, Union[str, int]]]:
+    def _get_ins_var_values(self) -> List[Dict[str, Any]]:
         return list(self.__dict__.values())
 
     def __add__(self, other):
@@ -59,7 +58,7 @@ class PersonWorkTime:
                 hour = int(m.group(1))
                 value["hour"] += hour
 
-def _calculate_working_time_from_thread_msgs(thread_msgs: List[Dict]) -> PersonWorkTime:
+def _calculate_working_time_from_thread_msgs(thread_msgs: List[Dict]) -> Iterator[PersonWorkTime]:
     for msg in thread_msgs:
         pwt = PersonWorkTime()
         msg_txt = msg["text"]

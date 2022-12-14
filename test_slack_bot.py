@@ -1,13 +1,15 @@
 import unittest
 from unittest.mock import patch
 import textwrap
-
-from app import PersonWorkTime
+from slack_bot import PersonWorkTime
 
 
 class TestSlackBot(unittest.TestCase):
-    def setup(self):
-        self.bolt_app_m = patch("app.slack_bolt.App")
+    def setUp(self):
+        # WHY?: slack_bot.slack_bolt.Appにすると、ModuleNotFoundError: No module named 'slack_bot.slack_bolt'; 'slack_bot' is not a package
+        # ちゃんとpatchできていないかも
+        self.bolt_app_m = patch("slack_bot.App").start()
+        self.os_m = patch("slack_bot.os").start()
         
     def tearDown(self):
         patch.stopall()
